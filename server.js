@@ -3,21 +3,18 @@ const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
 const util = require('util')
-const PORT = 4011
-const HOST = '0.0.0.0'
-const readFileAsync = util.promisify(fs.readFile)
-const writeFileAsync = util.promisify(fs.writeFile)
-const { jsPDF } = require('jspdf')
 const pdfCreatorNode = require('pdf-creator-node')
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
-const html2pdf = require('html-pdf');
 const puppeteer = require('puppeteer')
 const axios = require('axios')
 
 
 
 
+
+const PORT = 4011
+const HOST = '0.0.0.0'
+const readFileAsync = util.promisify(fs.readFile)
+const writeFileAsync = util.promisify(fs.writeFile)
 
 
 
@@ -155,17 +152,11 @@ app.use((req, res, next) => {
     console.log(`${req.method}:${req.originalUrl}`)
     return next()
 })
-
 app.use(cors())
 app.set('views', __dirname + '/templates');
-// app.set('public', __dirname + '/templates');
 app.use(express.static(path.join(__dirname, 'public')));
-// app.use(express.static('public'))
-// app.use(express.static('files'))
-
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'ejs');
-
 const router = express.Router()
 
 
@@ -191,7 +182,7 @@ router.get(`/canvas`, (req, res, next) => {
 /**
  * Response in browser from this url 
  * blob:http://3.82.250.75:4011/ec69522f-3614-4377-b413-1e8b8545ce83
- * 
+* Pdf generation using jsPDF 
     sir demo ready ha 
     what we achieved is 
     1-browser captures a canvas 
@@ -202,7 +193,6 @@ router.get(`/canvas`, (req, res, next) => {
     6-the frontend receives a downloaded pdf with canvas in it 
 
 */
-
 router.post(`/canvas`, async (req, res, next) => {
     try {
 
@@ -298,8 +288,8 @@ router.post(`/canvas`, async (req, res, next) => {
         }
         doc.addImage(canvas, 'JPEG', xMargin, height, 500, 500)
         doc.save(`./public/${filename}`)
-        var file = fs.createReadStream(filePath);
-        var stat = fs.statSync(filePath);
+        const file = fs.createReadStream(filePath);
+        const stat = fs.statSync(filePath);
         res.setHeader('Content-Length', stat.size);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename=quote.pdf');
@@ -311,7 +301,9 @@ router.post(`/canvas`, async (req, res, next) => {
     }
 })
 
-
+/**
+ * Pdf generation using puppeteer
+ */
 router.get(`/canvas/html`, async (req, res, next) => {
     try {
         const browser = await puppeteer.launch({ executablePath: '/usr/bin/chromium-browser' })
@@ -348,77 +340,39 @@ router.get('/create', async (req, res, next) => {
     try {
 
         const name = req.query.name;
-        // const headerContent = req.query.headerContent;
         if (!name) {
             return res.status(400).json({ message: 'name is required.', data: {} })
         }
         else {
             const pdfName = `${name}.pdf`;
             const pdfTemplatePath = path.join(__dirname, './templates/pdf.html')
-            var projectRoot = process.cwd();
-            projectRoot = projectRoot.replace(/\\/g, '/');
-            var imgBase = 'file:///' + projectRoot + '/public/assets/images/image.png';
-            var imgSrc = 'file://' + __dirname + '/public/assets/images/image.png';
-            imgSrc = path.normalize(imgSrc);
-            console.log("imgBase", imgBase)
-            console.log("imgSrc", imgSrc)
-
-
             const pdfOptions = {
                 format: 'A4',
                 base: 'file://' + process.cwd() + '/public',
                 orientation: 'potrait',
                 border: "3mm",
                 header: {
-                    height: "30mm",
+                    // height: "30mm",
                     contents: `
                     <div id="pageHeader">
-                    <h5
-                    style='
-                    color:black;
-                    padding-left:6rem;
-                    padding-top:0.5rem;
-                    text-transform:uppercase;
-                    font-size:16px;
-                    '
-                    >welhandover-document 1234-revision 5</h5>
-                    <p
-                    style='
-                    color:black;
-                    padding-left:8.5rem;
-                    '
-                    >From Construntion to Operation</p>
-                    </div>`,
+                     <img style="display:none" src="data:image/png;base64,${logo}" height="40" width="150" />
+                        <div class="headerWrapper">
+                            <div class="logoWrapper">
+                                <img src="data:image/png;base64,${logo}" height="40" width="150"/></div>
+                            </div>
+                            <div class="headingWrapper">
+                            <p style='font-size:16px;text-transform:uppercase;'>welhandover-document 1234-revision 5</p> 
+                            <p style='font-size:16px;'>From Construntion to Operation</p> 
+                        </div>       
+                </div>
+    
+                   `,
                 },
-                // this way you can put your header template in another file
-                /**
-                 * // backslash to do not evaluate in the first compile
-                   headerTemplate = '<div>My Header: \{{page}} {{userName}}</div>';
-                 */
-                //   default: Handlebars.compile(headerTemplate)({userName: 'John Doe'}),
-                // },
                 footer: {
                     height: "5mm",
                     contents: {
                         default:
-                            '<div id="pageFooter" style="margin-left:300; font-size: 12px;">{{page}}/{{pages}}</div>',
-                        // first: '1',
-                        // 2: '2',
-                        // 3: '3',
-                        // 4: '4',
-                        // 5: '5',
-                        // 6: '6',
-                        // 7: '7',
-                        // 8: '8',
-                        // 9: '9',
-                        // 10: '10',
-
-
-
-
-                        // Any page number is working. 1-based index
-                        // default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-                        // last: 'Last Page'
+                            '<div id="pageFooter" style="margin-left:300; font-size: 12px;">{{page}}/{{pages}}</div>'
                     }
                 }
             }
