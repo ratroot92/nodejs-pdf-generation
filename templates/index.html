@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+    <canvas id="myCanvas" width="500" height="500" style="border:1px solid #000000;">
+        Your browser does not support the HTML canvas tag.
+        </canvas>
+
+    <button onclick="downloadPdf">download PDF</button>
+
+    
+</body>
+
+<script>
+
+/**  
+ * http://3.82.250.75:4011/pdf/canvas
+ */
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    var grd = ctx.createLinearGradient(0, 0, 200, 0);
+    grd.addColorStop(0, "red");
+    grd.addColorStop(1, "white");
+    ctx.fillStyle = grd;
+    ctx.fillRect(10, 10, 150, 80);
+   const canvas=c.toDataURL('image/png')
+//    const canvas=console.log(document.getElementsByTagName("canvas")[0].toDataURL('image/png'))
+
+//     fetch('http://3.82.250.75:4011/pdf/canvas',{
+//         method: 'POST',
+//     headers: {
+//     'Content-Type': 'application/json'
+//     },
+//     body:JSON.stringify({canvas})
+//     })
+//     .then( res => res.blob() )
+//   .then( blob => {
+//     console.log("Success Downloading PDF")
+//     var file = window.URL.createObjectURL(blob);
+//     window.location.assign(file);
+//   })
+  
+//   .catch(err=>{
+//         console.log("err.message ==>",err.message)
+//         console.log("err.stack ==>",err.stack)
+
+//     })
+
+    function downloadPdf(){
+        let c = document.getElementById("myCanvas");
+    let ctx = c.getContext("2d");
+    let grd = ctx.createLinearGradient(0, 0, 200, 0);
+    grd.addColorStop(0, "red");
+    grd.addColorStop(1, "white");
+    ctx.fillStyle = grd;
+    ctx.fillRect(10, 10, 150, 80);
+    const canvas=c.toDataURL('image/png')
+    fetch('http://3.82.250.75:4011/pdf/canvas',{
+        method: 'POST',
+    headers: {
+    'Content-Type': 'application/json'
+    },
+    body:JSON.stringify({canvas})
+    })
+    .then( res => res.blob() )
+  .then( blob => {
+    console.log("Success Downloading PDF")
+    var file = window.URL.createObjectURL(blob);
+    window.location.assign(file);
+  })
+  
+  .catch(err=>{
+        console.log("err.message ==>",err.message)
+        console.log("err.stack ==>",err.stack)
+
+    })
+    }
+
+    </script>
+</html>
